@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webtoonapp/models/webtoon_detail_model.dart';
 import 'package:webtoonapp/models/webtoon_episode_model.dart';
 import 'package:webtoonapp/services/api_service.dart';
+import 'package:webtoonapp/widgets/episode_widget.dart';
 
 class DetailScreen extends StatefulWidget {
   final String title, thumb, id;
@@ -62,7 +64,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           ]),
                       child: Image.network(widget.thumb, headers: const {
                         "User-Agent":
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
                       }),
                     ),
                   ),
@@ -82,7 +84,9 @@ class _DetailScreenState extends State<DetailScreen> {
                           const SizedBox(
                             height: 15,
                           ),
-                          Text('${snapshot.data!.genre} / ${snapshot.data!.age}'),
+                          Text(
+                              '${snapshot.data!.genre} / ${snapshot.data!
+                                  .age}'),
                         ],
                       );
                     }
@@ -97,31 +101,15 @@ class _DetailScreenState extends State<DetailScreen> {
                     if (snapshot.hasData) {
                       return Column(
                         children: [
-                          for(var episode in snapshot.data!) Container(
-                            margin: EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade200,
-                              borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 10),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(episode.title,style: TextStyle(color: Colors.white,fontSize: 16),),
-                                  Icon(Icons.chevron_right_outlined,color: Colors.white)
-                                ],
-                              ),
-                            ),
-                          )
+                          for (var episode in snapshot.data!)
+                            Episode(episode: episode,webtoonId:widget.id)
                         ],
                       );
-                    } else if(snapshot.hasError) {
+                    } else if (snapshot.hasError) {
                       return Text('에러났어 뭐가 문제임');
                     }
                     return Container();
                   })
-
             ],
           ),
         ),
