@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webtoonapp/models/webtoon_detail_model.dart';
 import 'package:webtoonapp/models/webtoon_episode_model.dart';
 import 'package:webtoonapp/services/api_service.dart';
@@ -18,12 +18,47 @@ class DetailScreen extends StatefulWidget {
 class _DetailScreenState extends State<DetailScreen> {
   late Future<WebtoonDetailModel> webtoon;
   late Future<List<WebtoonEpisodeModel>> episodes;
+  late SharedPreferences prefs;
+  bool isLiked = false;
+
+  Future initialPref() async {
+    prefs = await SharedPreferences.getInstance();
+    final likedToons = prefs.getStringList('likedToons');
+    if(likedToons != null){
+      if(likedToons.contains(widget.id) == true){
+        setState(() {
+          isLiked = true;
+        });
+      }
+    } else {
+      await prefs.setStringList('likedToons', []);
+    }
+  }
+
+  onHeartTap() async {
+    final likedToons = prefs.getStringList('likedToons');
+    if(likedToons != null){
+      if(isLiked){
+        likedToons.remove(widget.id);
+      } else {
+        likedToons.add(widget.id);
+      }
+      await prefs.setStringList('likedToons',likedToons);
+      setState(() {
+        isLiked = !isLiked;
+      });
+
+    }
+  }
+
+
 
   @override
   void initState() {
     super.initState();
     webtoon = ApiService.getToonById(widget.id);
     episodes = ApiService.getLatestEpisodesById(widget.id);
+    initialPref();
   }
 
   @override
@@ -40,6 +75,9 @@ class _DetailScreenState extends State<DetailScreen> {
           style: TextStyle(
               color: Colors.green, fontSize: 23, fontWeight: FontWeight.w700),
         ),
+        actions: [
+          IconButton(onPressed: onHeartTap, icon: isLiked? const Icon(Icons.favorite_rounded) : const Icon(Icons.favorite_outline_outlined))
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -64,7 +102,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           ]),
                       child: Image.network(widget.thumb, headers: const {
                         "User-Agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
                       }),
                     ),
                   ),
@@ -85,8 +123,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             height: 15,
                           ),
                           Text(
-                              '${snapshot.data!.genre} / ${snapshot.data!
-                                  .age}'),
+                              '${snapshot.data!.genre} / ${snapshot.data!.age}'),
                         ],
                       );
                     }
@@ -102,7 +139,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       return Column(
                         children: [
                           for (var episode in snapshot.data!)
-                            Episode(episode: episode,webtoonId:widget.id)
+                            Episode(episode: episode, webtoonId: widget.id)
                         ],
                       );
                     } else if (snapshot.hasError) {
